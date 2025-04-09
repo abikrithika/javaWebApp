@@ -7,9 +7,11 @@ pool:
   vmImage: 'ubuntu-latest'
 
 variables:
-  # Define necessary variables
-  tomcatPath: 'C:/Program Files/Apache Software Foundation/Tomcat 11.0/webapps/MyWebApp'  # Path to your Tomcat webapp folder
-  artifactStagingDirectory: '$(Build.ArtifactStagingDirectory)'  # Path for storing build artifacts
+  # Define variables for paths and other resources
+  tomcatPath: 'C:/Program Files/Apache Software Foundation/Tomcat 11.0/webapps/MyWebApp'  # Update with correct Tomcat path
+  artifactStagingDirectory: '$(Build.ArtifactStagingDirectory)'  # Build artifacts staging directory
+  javaVersion: '21'  # Specify the required Java version
+  servletJarPath: 'WEB-INF/lib/jakarta.servlet-api-5.0.0.jar'  # Path to your servlet JAR
 
 steps:
 
@@ -20,7 +22,7 @@ steps:
 # Step 2: Install JDK (Java 21)
 - task: JavaToolInstaller@0
   inputs:
-    versionSpec: '21'  # Specify the Java version (change as per your requirement)
+    versionSpec: $(javaVersion)  # Use Java version defined in variables
     jdkArchitecture: 'x64'
   displayName: 'Install JDK'
 
@@ -29,8 +31,8 @@ steps:
     # Ensure the directories exist
     mkdir -p WEB-INF/classes
 
-    # Compile Java files (adjust paths as needed)
-    javac -cp WEB-INF/lib/jakarta.servlet-api-5.0.0.jar -d WEB-INF/classes WEB-INF/classes/HelloServlet.java
+    # Compile Java files with classpath and output directory
+    javac -cp $(servletJarPath) -d WEB-INF/classes WEB-INF/classes/HelloServlet.java
   displayName: 'Compile Java Files'
 
 # Step 4: Copy Compiled Files to Tomcat's webapps directory
@@ -51,6 +53,6 @@ steps:
 # Step 6: Publish Build Artifacts (Optional)
 - task: PublishPipelineArtifact@1
   inputs:
-    targetPath: $(artifactStagingDirectory)  # Ensure this points to a valid location
+    targetPath: $(artifactStagingDirectory)  # Path for staging artifacts
     artifact: 'java-web-app'
   displayName: 'Publish Build Artifacts'
