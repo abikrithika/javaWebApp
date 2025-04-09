@@ -1,19 +1,25 @@
 trigger:
-- main  # Trigger the pipeline on changes to the main branch
+  branches:
+    include:
+      - main  # Trigger the pipeline on changes to the main branch
 
 pool:
   vmImage: 'ubuntu-latest'
 
+variables:
+  # Path to the Tomcat directory on your build agent
+  tomcatPath: 'C:/Program Files/Apache Software Foundation/Tomcat 11.0/webapps/MyWebApp'
+
 steps:
 
-# Step 1: Checkout the code
+# Step 1: Checkout the code from the repository
 - task: Checkout@1
   displayName: 'Checkout Code'
 
-# Step 2: Install JDK using JavaToolInstaller
+# Step 2: Install JDK using JavaToolInstaller task
 - task: JavaToolInstaller@0
   inputs:
-    versionSpec: '21'  # Adjust to the version you need (e.g., '11' for Java 11)
+    versionSpec: '21'  # Specify the Java version you want (e.g., '11', '17', etc.)
     jdkArchitecture: 'x64'
   displayName: 'Install JDK'
 
@@ -22,18 +28,27 @@ steps:
     # Ensure the directories exist
     mkdir -p WEB-INF/classes
 
-    # Compile the Java files with the specified classpath
+    # Compile the Java files with the specified classpath (change paths as needed)
     javac -cp WEB-INF/lib/jakarta.servlet-api-5.0.0.jar -d WEB-INF/classes WEB-INF/classes/HelloServlet.java
   displayName: 'Compile Java Files'
 
-# Step 4: Copy Compiled Files to Tomcat webapps Folder
+# Step 4: Copy Compiled Files to Tomcat's webapps directory
 - script: |
     # Copy the compiled classes to Tomcat's webapps directory
-    cp -r WEB-INF/classes/* "C:/Program Files/Apache Software Foundation/Tomcat 11.0/webapps/MyWebApp/WEB-INF/classes/"
-    cp -r WEB-INF/lib/* "C:/Program Files/Apache Software Foundation/Tomcat 11.0/webapps/MyWebApp/WEB-INF/lib/"
+    echo "Copying files to Tomcat..."
+    cp -r WEB-INF/classes/* "${tomcatPath}/WEB-INF/classes/"
+    cp -r WEB-INF/lib/* "${tomcatPath}/WEB-INF/lib/"
   displayName: 'Copy Compiled Files to Tomcat'
 
-# Step 5: Test the Deployment
+# Step 5: Test the Deployment (Optional)
 - script: |
+    # Test the deployment with a curl request to see if the web app is up
     curl http://localhost:8080/MyWebApp
   displayName: 'Test Deployment'
+
+# Optional: Publish Pipeline Artifacts (if you want to store artifacts like WAR files)
+- task: PublishPipelineArtifact@1
+  inputs:
+    targetPath: $(Build.ArtifactStagingDirectory)  # Ensure this path is correct
+    artifact: 'java-web-app'
+  displayName: 'Publish Artifacts'
