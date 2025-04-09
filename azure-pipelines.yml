@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 trigger:
   branches:
     include:
@@ -54,3 +55,61 @@ steps:
     targetPath: $(artifactStagingDirectory)  # Ensure this points to a valid location
     artifact: 'java-web-app'
   displayName: 'Publish Build Artifacts'
+=======
+trigger:
+  branches:
+    include:
+      - main  # Trigger the pipeline on changes to the main branch
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+variables:
+  # Define necessary variables
+  tomcatPath: 'C:/Program Files/Apache Software Foundation/Tomcat 11.0/webapps/MyWebApp'  # Path to your Tomcat webapp folder
+  artifactStagingDirectory: '$(Build.ArtifactStagingDirectory)'  # Path for storing build artifacts
+  
+steps:
+
+# Step 1: Checkout the code from the repository
+- task: Checkout@1
+  displayName: 'Checkout Code'
+
+# Step 2: Install JDK (Java 21)
+- task: JavaToolInstaller@0
+  inputs:
+    versionSpec: '21'  # Specify the Java version (change as per your requirement)
+    jdkArchitecture: 'x64'
+  displayName: 'Install JDK'
+
+# Step 3: Compile Java Files (with classpath and output directory)
+- script: |
+    # Ensure the directories exist
+    mkdir -p WEB-INF/classes
+
+    # Compile Java files (adjust paths as needed)
+    javac -cp WEB-INF/lib/jakarta.servlet-api-5.0.0.jar -d WEB-INF/classes WEB-INF/classes/HelloServlet.java
+  displayName: 'Compile Java Files'
+
+# Step 4: Copy Compiled Files to Tomcat's webapps directory
+- script: |
+    # Ensure Tomcat's webapps directory exists and copy the files
+    echo "Copying compiled files to Tomcat..."
+    mkdir -p "${tomcatPath}/WEB-INF/classes"  # Create classes directory if not already present
+    cp -r WEB-INF/classes/* "${tomcatPath}/WEB-INF/classes/"
+    cp -r WEB-INF/lib/* "${tomcatPath}/WEB-INF/lib/"
+  displayName: 'Copy Compiled Files to Tomcat'
+
+# Step 5: Test the Deployment (Optional)
+- script: |
+    # Test the deployment with a curl request to see if the web app is running
+    curl http://localhost:8080/MyWebApp
+  displayName: 'Test Deployment'
+
+# Step 6: Publish Build Artifacts (Optional)
+- task: PublishPipelineArtifact@1
+  inputs:
+    targetPath: $(artifactStagingDirectory)  # Ensure this points to a valid location
+    artifact: 'java-web-app'
+  displayName: 'Publish Build Artifacts'
+>>>>>>> ec8bf43 (Added Azure pipeline YAML file)
