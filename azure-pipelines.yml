@@ -10,24 +10,30 @@ steps:
 - task: Checkout@1
   displayName: 'Checkout Code'
 
-# Step 2: Install JDK
-- task: UseJavaVersion@1
+# Step 2: Install JDK using JavaToolInstaller
+- task: JavaToolInstaller@0
   inputs:
-    versionSpec: '21.0.6'  # Use Java 11 or adjust based on your requirement
+    versionSpec: '21'  # Adjust to the version you need (e.g., '11' for Java 11)
     jdkArchitecture: 'x64'
+  displayName: 'Install JDK'
 
-# Step 3: Build the application (if applicable, for example compiling JSPs)
+# Step 3: Compile Java Files (with classpath)
 - script: |
-    javac -d out src/**/*.java
+    # Ensure the directories exist
+    mkdir -p WEB-INF/classes
+
+    # Compile the Java files with the specified classpath
+    javac -cp WEB-INF/lib/jakarta.servlet-api-5.0.0.jar -d WEB-INF/classes WEB-INF/classes/HelloServlet.java
   displayName: 'Compile Java Files'
 
-# Step 4: Deploy to Tomcat
-- task: PublishPipelineArtifact@1
-  inputs:
-    targetPath: 'out'  # Path to the compiled application or WAR file
-    artifact: 'java-web-app'
+# Step 4: Copy Compiled Files to Tomcat webapps Folder
+- script: |
+    # Copy the compiled classes to Tomcat's webapps directory
+    cp -r WEB-INF/classes/* "C:/Program Files/Apache Software Foundation/Tomcat 11.0/webapps/MyWebApp/WEB-INF/classes/"
+    cp -r WEB-INF/lib/* "C:/Program Files/Apache Software Foundation/Tomcat 11.0/webapps/MyWebApp/WEB-INF/lib/"
+  displayName: 'Copy Compiled Files to Tomcat'
 
-# Step 5: Test the Deployment (Optional)
+# Step 5: Test the Deployment
 - script: |
     curl http://localhost:8080/MyWebApp
   displayName: 'Test Deployment'
