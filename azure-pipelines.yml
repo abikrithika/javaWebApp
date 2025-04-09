@@ -1,0 +1,33 @@
+trigger:
+- main  # Trigger the pipeline on changes to the main branch
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+steps:
+
+# Step 1: Checkout the code
+- task: Checkout@1
+  displayName: 'Checkout Code'
+
+# Step 2: Install JDK
+- task: UseJavaVersion@1
+  inputs:
+    versionSpec: '21.0.6'  # Use Java 11 or adjust based on your requirement
+    jdkArchitecture: 'x64'
+
+# Step 3: Build the application (if applicable, for example compiling JSPs)
+- script: |
+    javac -d out src/**/*.java
+  displayName: 'Compile Java Files'
+
+# Step 4: Deploy to Tomcat
+- task: PublishPipelineArtifact@1
+  inputs:
+    targetPath: 'out'  # Path to the compiled application or WAR file
+    artifact: 'java-web-app'
+
+# Step 5: Test the Deployment (Optional)
+- script: |
+    curl http://localhost:8080/MyWebApp
+  displayName: 'Test Deployment'
