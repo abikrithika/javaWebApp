@@ -1,0 +1,40 @@
+trigger:
+  branches:
+    include:
+      - main  # Trigger the pipeline on changes to the main branch
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+steps:
+  # Step 1: Checkout the code
+  - task: Checkout@1
+    displayName: 'Checkout Code'
+
+  # Step 2: Install JDK (For Java 21, adjust as necessary)
+  - task: JavaToolInstaller@0
+    inputs:
+      versionSpec: '21'
+      jdkArchitecture: 'x64'
+    displayName: 'Install JDK'
+
+  # Step 3: Compile Java Files
+  - script: |
+      # Compile Java files with classpath and output directory
+      javac -cp $(Build.SourcesDirectory)/WEB-INF/lib/jakarta.servlet-api-5.0.0.jar -d $(Build.SourcesDirectory)/WEB-INF/classes $(Build.SourcesDirectory)/WEB-INF/classes/HelloServlet.java
+    displayName: 'Compile Java Files'
+
+  # Step 4: Run Unit Tests (Optional)
+  # If you have unit tests, you can add steps for running them here.
+  # For example:
+  # - script: |
+  #       java -cp .:$(Build.SourcesDirectory)/WEB-INF/lib/jakarta.servlet-api-5.0.0.jar org.junit.runner.JUnitCore TestClassName
+  #   displayName: 'Run Unit Tests'
+
+  # Step 5: Archive the compiled files (as a build artifact)
+  - task: PublishBuildArtifacts@1
+    inputs:
+      pathToPublish: $(Build.SourcesDirectory)/WEB-INF/classes
+      artifactName: 'MyWebApp'
+      publishLocation: 'Container'
+    displayName: 'Publish Build Artifact'
